@@ -1,0 +1,72 @@
+---
+title: "Data Programming"
+subtitle: "Homework 5"
+author: "Anna Miletova"
+date: "`r format(Sys.time(), '%e %B %Y')`"
+format: 
+  html:
+  embed-resources: true
+execute: 
+  warning: false
+messages: false
+echo: true
+error: true
+---
+  
+```{r}
+# libs
+library(tibble)
+library(ggplot2)
+library(dplyr)
+
+dataset <- read.csv("dataset.csv", sep = ";")
+
+states <- read.csv("state_abbreviations_and_populations.csv", sep = ";")
+states <- states %>%
+  rename(Full.State.Name = Name)
+
+data <- merge(dataset, states, by.x = "State", by.y = "Abbreviation", all.x = TRUE)
+
+data$Longitude <- as.numeric(data$Longitude)
+data$Latitude <- as.numeric(data$Latitude)
+```
+
+### 1. Show the number of fatalities per state (full name of state required). Futhermore, plot the results with a histogram.
+
+```{r}
+
+fatalities_per_state <- data %>%
+  group_by(Full.State.Name) %>%
+  summarise(Fatalities = n())
+
+ggplot(fatalities_per_state, aes(x = Fatalities, y = Full.State.Name)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = "count", y = "State")
+
+```
+
+### 2. Plot death by gender across race with a histogram, entirely with R, not with markdown/quarto!
+
+```{r}
+
+ggplot(data, aes(y = Race)) +
+  geom_bar(position = "stack") +
+  facet_wrap(~Gender, ncol = 2, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=1)) +
+  labs(x = "count", y = "Race", fill = "Gender")
+
+```
+
+### 3. Plot the outline of the USA by scatterploting the locations of deaths.
+
+```{r}
+data <- subset(data, Longitude >= -180 & Longitude <= -60 & Latitude >= 0 & Latitude <= 100)
+
+ggplot(data, aes(x = Longitude, y = Latitude)) +
+  geom_point(color = "black") +
+  scale_x_continuous(breaks = seq(-180, -60, by = 30)) +
+  scale_y_continuous(breaks = seq(0, 100, by = 10)) +
+  labs(x = "Longitude", y = "Latitude")
+
+```

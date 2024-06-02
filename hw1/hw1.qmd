@@ -1,0 +1,57 @@
+---
+title: "Data Programming"
+subtitle: "Homework 1"
+author: "Anna Miletova"
+date: "`r format(Sys.time(), '%e %B %Y')`"
+format: 
+  html:
+    embed-resources: true
+execute: 
+  warning: false
+  messages: false
+  echo: true
+  error: true
+---
+
+Transform the dataframe **automobile**
+
+```{r}
+automobile<-mtcars
+library(tidyverse)
+```
+
+1.  Move rownames to a column **cars.name**, remove rownames.
+2.  Add a column named **l/100km** whose values are based on column mpg, then delete column mpg.
+3.  Change the **am** column to a factor with levels **Automatic** and **Manual**.
+
+```{r}
+automobile <- rownames_to_column(automobile, var = "cars.name")
+rownames(automobile) <- NULL
+
+automobile$`lp100km` <- 235.215 / automobile$mpg
+automobile <- subset(automobile, select = -mpg)
+
+automobile$am <- factor(automobile$am, levels = c(0, 1), labels = c("Automatic", "Manual"))
+```
+
+After the transformation display the data frame as a tibble then answer these questions independently.
+
+```{r}
+as_tibble(automobile) %>% print(n = nrow(automobile))
+```
+
+4.  What is the average number of gears?
+5.  Return the rows with cars with horsepower between 200 and 400.
+6.  Which car is most fuel efficient car among 6 cylinder cars?
+
+```{r}
+average_gear <- mean(automobile$gear)
+print(average_gear)
+
+hp_cars <- automobile[automobile$hp >= 200 & automobile$hp <= 400, ]
+as_tibble(hp_cars)
+
+six_cyl_cars <- subset(automobile, automobile$cyl == 6)
+most_fuel_efficient_car <- six_cyl_cars[which.min(six_cyl_cars$lp100km), ]
+print(most_fuel_efficient_car$cars.name)
+```
