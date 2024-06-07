@@ -1,0 +1,47 @@
+---
+title: "Animals’ life span. Factors that play role in the longevity of animals."
+subtitle: "Data Programming course project work"
+author:
+  - name: Anna Miletova (BF1-EN)
+    email: "annamiletova@gmail.com, 89231151@student.upr.si"
+    affiliation: 
+      - University Primorska, Koper, Slovenia
+date: "`r format(Sys.time(), '%e %B %Y')`"
+format: 
+  html:
+    embed-resources: true
+execute: 
+  warning: true
+  messages: true
+  echo: true
+  error: true
+---
+
+## 1. Introduction
+
+*Introduction / Presentation and description of the problem*
+
+## 2. Dataframes
+
+*Presentation of the data (present the data by showing the head of
+your dataframes, showing the types and explaining what is column is/what
+unit is in.)*
+
+## 3. Data aggregation
+
+*Aggregation of data. Show the result as a table (at least 3). Use only methods, that lead to a solution, like user defined functions, mutate, filter, summarise, inner_join, ggplot. Use the tidyverse approach by chaining the above functions and using pipes %>%.*
+
+## 4. Explotary data analysis
+
+*Visualisation of the data, at least 3 relevant (and
+distinct) ggplots, that are not the same type of plot. Explain each
+ggplot)*
+
+## 5. Conclusion
+
+*Interpretation / Conclusion*
+
+## 6. References
+
+(@) AnAge: Animal Ageing and Longevity Data Dataset. ([kaggle.com](https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage.csv))
+(@) Peto's paradox ([widipedia.org](https://en.wikipedia.org/wiki/Peto%27s_paradox))
