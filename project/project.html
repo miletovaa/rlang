@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2024-06-07" />
+<meta name="date" content="2024-06-11" />
 
 <title>Animals’ life span. Factors that play role in the longevity of animals.</title>
 
@@ -354,47 +354,261 @@ in the longevity of animals.</h1>
 <h3 class="subtitle">Data Programming course project work</h3>
 <h4 class="author">Anna Miletova (BF1-EN)</h4>
 <address class="author_afil">
-University Primorska, Koper,
+University Primorska FAMNIT, Koper,
 Slovenia<br><a class="author_email" href="mailto:#"><a href="mailto:annamiletova@gmail.com" class="email">annamiletova@gmail.com</a>, <a href="mailto:89231151@student.upr.si" class="email">89231151@student.upr.si</a></a>
 </address>
-<h4 class="date">7 June 2024</h4>
+<h4 class="date">11 June 2024</h4>
 
 </div>
 
 
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library(tibble)</code></pre>
 <div id="introduction" class="section level2">
 <h2>1. Introduction</h2>
-<p><em>Introduction / Presentation and description of the
-problem</em></p>
+<!--
+*Introduction / Presentation and description of the problem*
+-->
 </div>
 <div id="dataframes" class="section level2">
 <h2>2. Dataframes</h2>
-<p><em>Presentation of the data (present the data by showing the head of
-your dataframes, showing the types and explaining what is column is/what
-unit is in.)</em></p>
+<!--
+*Presentation of the data (present the data by showing the head of your dataframes, showing the types and explaining what is column is/what unit is in.)*
+-->
+<div id="in-my-work-ive-used-two-dataframes" class="section level4">
+<h4>In my work I’ve used two dataframes:</h4>
+</div>
+<div id="animal-information-dataset-further-animals-df" class="section level3">
+<h3>1) Animal Information Dataset (further – “animals DF”)</h3>
+<pre class="r"><code>  animals &lt;- read.csv(&quot;Animal Dataset.csv&quot;, header = TRUE, sep = &quot;,&quot;)
+  
+  animals &lt;- select(animals,
+      Animal,
+      Lifespan..years.,
+      Countries.Found,
+      Habitat,
+      Weight..kg.,
+      Diet,
+      Social.Structure) %&gt;%
+    group_by(Animal) %&gt;%
+    slice(1)
+
+  animals &lt;- ungroup(animals)</code></pre>
+<p>The data in the dataframe was filtered to get only <strong>unique
+entries</strong> of the information we are interested in according to
+the chosen topic. The used columns are:</p>
+<pre class="r"><code>  print(colnames(animals))</code></pre>
+<pre><code>## [1] &quot;Animal&quot;           &quot;Lifespan..years.&quot; &quot;Countries.Found&quot;  &quot;Habitat&quot;         
+## [5] &quot;Weight..kg.&quot;      &quot;Diet&quot;             &quot;Social.Structure&quot;</code></pre>
+<p>This dataframe contains the majority of the necessary data for my
+research, including <em>habitat, body mass, diet type,</em> and
+<em>social structure</em> of the animal species, forming the foundation
+of the work.</p>
+<pre class="r"><code>  as_tibble(animals)</code></pre>
+<pre><code>## # A tibble: 196 × 7
+##    Animal             Lifespan..years. Countries.Found Habitat Weight..kg. Diet 
+##    &lt;chr&gt;              &lt;chr&gt;            &lt;chr&gt;           &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;
+##  1 Aardvark           20-30            Africa          Savann… 40-65       Inse…
+##  2 Aardwolf           10-12            Eastern and So… Grassl… 8-14        Inse…
+##  3 African Elephant   60-70            Africa          Savann… 2700-6000   Herb…
+##  4 African Lion       10-14            Africa          Grassl… 120-250     Carn…
+##  5 African Wild Dog   10-12            Sub-Saharan Af… Savann… 18-36       Carn…
+##  6 Alpine Ibex        15-20            European Alps   Mounta… 19-120      Herb…
+##  7 Amazon Rainforest… 4-17             Amazon Rainfor… Amazon… Up to 0.5   Inse…
+##  8 American Bison     15-20            North America   Grassl… 318-1,000   Herb…
+##  9 Anteater           15-20            Central and So… Grassl… 22-41       Inse…
+## 10 Arabian Horse      25-30            Middle East, N… Middle… 380-1000    Herb…
+## # ℹ 186 more rows
+## # ℹ 1 more variable: Social.Structure &lt;chr&gt;</code></pre>
+</div>
+<div id="animals-further-classifications-df" class="section level3">
+<h3>2) Animals (further – “classifications DF”)</h3>
+<pre class="r"><code>  classifications &lt;- read.csv(&quot;animals.csv&quot;, header = TRUE, sep = &quot;,&quot;)
+  
+  classifications &lt;- select(classifications, 
+    Animal.Name,
+    Class,
+    Order,
+    Family,
+    Genus)</code></pre>
+<p>This dataframe was involved to get more <strong>detailed animal’s
+classification info</strong> such as:</p>
+<pre class="r"><code>  print(colnames(classifications) %&gt;% setdiff(&quot;Animal.Name&quot;))</code></pre>
+<pre><code>## [1] &quot;Class&quot;  &quot;Order&quot;  &quot;Family&quot; &quot;Genus&quot;</code></pre>
+<!--
+### 3) AnAge: Animal Ageing and Longevity Data
+
+
+```r
+anage <- read.csv("anage_data.csv", header = TRUE, sep = "\t")
+
+print(colnames(anage))
+```
+
+```
+##  [1] "HAGRID"                           "Kingdom"                         
+##  [3] "Phylum"                           "Class"                           
+##  [5] "Order"                            "Family"                          
+##  [7] "Genus"                            "Species"                         
+##  [9] "Common.name"                      "Female.maturity..days."          
+## [11] "Male.maturity..days."             "Gestation.Incubation..days."     
+## [13] "Weaning..days."                   "Litter.Clutch.size"              
+## [15] "Litters.Clutches.per.year"        "Inter.litter.Interbirth.interval"
+## [17] "Birth.weight..g."                 "Weaning.weight..g."              
+## [19] "Adult.weight..g."                 "Growth.rate..1.days."            
+## [21] "Maximum.longevity..yrs."          "Source"                          
+## [23] "Specimen.origin"                  "Sample.size"                     
+## [25] "Data.quality"                     "IMR..per.yr."                    
+## [27] "MRDT..yrs."                       "Metabolic.rate..W."              
+## [29] "Body.mass..g."                    "Temperature..K."                 
+## [31] "References"
+```
+
+```r
+anage <- select(anage,
+                Common.name,
+                Phylum,
+                Class,
+                Order,
+                Family,
+                Species,
+                Metabolic.rate..W.)
+
+#anage <- filter(anage, complete.cases(anage))
+```
+
+-->
+</div>
 </div>
 <div id="data-aggregation" class="section level2">
 <h2>3. Data aggregation</h2>
-<p><em>Aggregation of data. Show the result as a table (at least 3). Use
-only methods, that lead to a solution, like user defined functions,
-mutate, filter, summarise, inner_join, ggplot. Use the tidyverse
-approach by chaining the above functions and using pipes
-%&gt;%.</em></p>
+<!--
+*Aggregation of data. Show the result as a table (at least 3). Use only methods, that lead to a solution, like user defined functions, mutate, filter, summarise, inner_join, ggplot. Use the tidyverse approach by chaining the above functions and using pipes %>%.*
+-->
+<div id="for-the-further-analysis-it-was-needed-to-process-some-data." class="section level4">
+<h4>For the further analysis, it was needed to process some data.</h4>
+<ol style="list-style-type: decimal">
+<li><em>Lifespan</em> values were <strong>inconsistent</strong>, so I
+got a new column <em>Average Lifespan (dbl, in years)</em> using defined
+function and <code>mutate</code>. The same was done with the
+<em>Weight..kg.</em> column. The entries with unknown average lifespan
+were filtered with <code>filter</code>, since this parameter is the key
+of the whole research.</li>
+</ol>
+<pre class="r"><code>  process_intervals &lt;- function(col) {
+    cleaned_values &lt;- numeric(length(col))
+    
+    intervals &lt;- grepl(&quot;-&quot;, col)
+    dash_split &lt;- strsplit(col[intervals], &quot;-&quot;)
+    interval_avg &lt;- sapply(dash_split, function(x) mean(as.double(x)))
+    cleaned_values[intervals] &lt;- interval_avg
+    
+    days_values &lt;- grepl(&quot;days&quot;, col, ignore.case = TRUE)
+    days_numbers &lt;- as.double(gsub(&quot;[^0-9]+&quot;, &quot;&quot;, col[days_values]))
+    cleaned_values[days_values] &lt;- days_numbers / 365
+    
+    months_values &lt;- grepl(&quot;months&quot;, col, ignore.case = TRUE)
+    months_numbers &lt;- as.double(gsub(&quot;[^0-9]+&quot;, &quot;&quot;, col[months_values]))
+    cleaned_values[months_values] &lt;- months_numbers / 12
+    
+    remaining_values &lt;- !(intervals | days_values | months_values)
+    cleaned_values[remaining_values] &lt;- as.double(gsub(&quot;[^0-9]+&quot;, &quot;&quot;, col[remaining_values]))
+    
+    return(cleaned_values)
+  }
+  
+  data &lt;- animals %&gt;%
+    mutate(Average.Lifespan = process_intervals(Lifespan..years.)) %&gt;%
+    mutate(Weight..kg. = process_intervals(Weight..kg.)) %&gt;%
+    filter(!is.na(Average.Lifespan))</code></pre>
+<pre><code>## Warning: There were 3 warnings in `mutate()`.
+## The first warning was:
+## ℹ In argument: `Average.Lifespan = process_intervals(Lifespan..years.)`.
+## Caused by warning in `mean()`:
+## ! NAs introduced by coercion
+## ℹ Run `dplyr::last_dplyr_warnings()` to see the 2 remaining warnings.</code></pre>
+<pre><code>## Warning: There were 2 warnings in `mutate()`.
+## The first warning was:
+## ℹ In argument: `Weight..kg. = process_intervals(Weight..kg.)`.
+## Caused by warning in `mean()`:
+## ! NAs introduced by coercion
+## ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+<pre class="r"><code>  data$Lifespan..years. &lt;- NULL
+  
+  
+  # TODO: to fix decimal values in weight
+  print(data[7,])</code></pre>
+<pre><code>## # A tibble: 1 × 7
+##   Animal              Countries.Found Habitat Weight..kg. Diet  Social.Structure
+##   &lt;chr&gt;               &lt;chr&gt;           &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;           
+## 1 Amazon Rainforest … Amazon Rainfor… Amazon…           5 Inse… Solitary        
+## # ℹ 1 more variable: Average.Lifespan &lt;dbl&gt;</code></pre>
+<pre class="r"><code>  print(data[8,])</code></pre>
+<pre><code>## # A tibble: 1 × 7
+##   Animal         Countries.Found Habitat      Weight..kg. Diet  Social.Structure
+##   &lt;chr&gt;          &lt;chr&gt;           &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;           
+## 1 American Bison North America   Grasslands,…          NA Herb… Group-based     
+## # ℹ 1 more variable: Average.Lifespan &lt;dbl&gt;</code></pre>
+<pre class="r"><code>  print(data[19,])</code></pre>
+<pre><code>## # A tibble: 1 × 7
+##   Animal  Countries.Found Habitat     Weight..kg. Diet          Social.Structure
+##   &lt;chr&gt;   &lt;chr&gt;           &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;           
+## 1 Aye-Aye Madagascar      Rainforests        2.45 Omnivore, In… Solitary        
+## # ℹ 1 more variable: Average.Lifespan &lt;dbl&gt;</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Merging dataframes to get animal’s classification info:</li>
+</ol>
+<pre class="r"><code>  data &lt;- left_join(data, classifications, by = c(&quot;Animal&quot; = &quot;Animal.Name&quot;))</code></pre>
+<p>The result dataframe I have been workin with for my data
+analysis:</p>
+<pre class="r"><code>  as_tibble(data)</code></pre>
+<pre><code>## # A tibble: 205 × 11
+##    Animal             Countries.Found Habitat Weight..kg. Diet  Social.Structure
+##    &lt;chr&gt;              &lt;chr&gt;           &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;           
+##  1 Aardvark           Africa          Savann…        52.5 Inse… Solitary        
+##  2 Aardwolf           Eastern and So… Grassl…        11   Inse… Solitary        
+##  3 African Elephant   Africa          Savann…      4350   Herb… Herd-based      
+##  4 African Lion       Africa          Grassl…       185   Carn… Group-based     
+##  5 African Wild Dog   Sub-Saharan Af… Savann…        27   Carn… Group-based     
+##  6 Alpine Ibex        European Alps   Mounta…        69.5 Herb… Group-based     
+##  7 Amazon Rainforest… Amazon Rainfor… Amazon…         5   Inse… Solitary        
+##  8 American Bison     North America   Grassl…        NA   Herb… Group-based     
+##  9 Anteater           Central and So… Grassl…        31.5 Inse… Solitary        
+## 10 Arabian Horse      Middle East, N… Middle…       690   Herb… Herd-based      
+## # ℹ 195 more rows
+## # ℹ 5 more variables: Average.Lifespan &lt;dbl&gt;, Class &lt;chr&gt;, Order &lt;chr&gt;,
+## #   Family &lt;chr&gt;, Genus &lt;chr&gt;</code></pre>
+<pre class="r"><code>  #data %&gt;% as_tibble() %&gt;% print(n=nrow(data))</code></pre>
+</div>
 </div>
 <div id="explotary-data-analysis" class="section level2">
 <h2>4. Explotary data analysis</h2>
-<p><em>Visualisation of the data, at least 3 relevant (and distinct)
-ggplots, that are not the same type of plot. Explain each
-ggplot)</em></p>
+<!--
+*Visualisation of the data, at least 3 relevant (and
+distinct) ggplots, that are not the same type of plot. Explain each
+ggplot)*
+-->
 </div>
 <div id="conclusion" class="section level2">
 <h2>5. Conclusion</h2>
-<p><em>Interpretation / Conclusion</em></p>
+<!--
+*Interpretation / Conclusion*
+-->
 </div>
 <div id="references" class="section level2">
 <h2>6. References</h2>
 <ol class="example" style="list-style-type: decimal">
-<li>AnAge: Animal Ageing and Longevity Data Dataset. (<a href="https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage.csv">kaggle.com</a>)</li>
+<li>Animal Information Dataset (<a href="https://www.kaggle.com/datasets/iamsouravbanerjee/animal-information-dataset">kaggle.com</a>)</li>
+<li>Animals Dataset (<a href="https://www.kaggle.com/datasets/hessahalkhattabi/animals">kaggle.com</a>)</li>
+<li>AnAge: Animal Ageing and Longevity Data Dataset. (<a href="https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage_data.csv">kaggle.com</a>)</li>
 <li>Peto’s paradox (<a href="https://en.wikipedia.org/wiki/Peto%27s_paradox">widipedia.org</a>)</li>
 </ol>
 </div>

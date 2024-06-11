@@ -5,43 +5,186 @@ author:
   - name: Anna Miletova (BF1-EN)
     email: "annamiletova@gmail.com, 89231151@student.upr.si"
     affiliation: 
-      - University Primorska, Koper, Slovenia
+      - University Primorska FAMNIT, Koper, Slovenia
 date: "`r format(Sys.time(), '%e %B %Y')`"
 format: 
   html:
     embed-resources: true
 execute: 
-  warning: true
-  messages: true
-  echo: true
-  error: true
+  warning: false
+messages: false
+echo: true
+error: true
 ---
+
+```{r}
+library(dplyr)
+library(tibble)
+```
 
 ## 1. Introduction
 
+<!--
 *Introduction / Presentation and description of the problem*
+-->
 
 ## 2. Dataframes
 
-*Presentation of the data (present the data by showing the head of
-your dataframes, showing the types and explaining what is column is/what
-unit is in.)*
+<!--
+*Presentation of the data (present the data by showing the head of your dataframes, showing the types and explaining what is column is/what unit is in.)*
+-->
+
+#### In my work I've used two dataframes:
+
+### 1) Animal Information Dataset (further -- "animals DF")
+
+```{r}
+  animals <- read.csv("Animal Dataset.csv", header = TRUE, sep = ",")
+  
+  animals <- select(animals,
+      Animal,
+      Lifespan..years.,
+      Countries.Found,
+      Habitat,
+      Weight..kg.,
+      Diet,
+      Social.Structure) %>%
+    group_by(Animal) %>%
+    slice(1)
+
+  animals <- ungroup(animals)
+```
+
+The data in the dataframe was filtered to get only **unique entries** of the information we are interested in according to the chosen topic. The used columns are: 
+
+```{r}
+  print(colnames(animals))
+```
+
+This dataframe contains the majority of the necessary data for my research, including *habitat, body mass, diet type,* and *social structure* of the animal species, forming the foundation of the work.
+
+```{r}
+  as_tibble(animals)
+```
+
+### 2) Animals (further -- "classifications DF")
+
+```{r}
+  classifications <- read.csv("animals.csv", header = TRUE, sep = ",")
+  
+  classifications <- select(classifications, 
+    Animal.Name,
+    Class,
+    Order,
+    Family,
+    Genus)
+```
+
+This dataframe was involved to get more **detailed animal's classification info** such as:
+
+```{r}
+  print(colnames(classifications) %>% setdiff("Animal.Name"))
+```
+
+<!--
+### 3) AnAge: Animal Ageing and Longevity Data
+
+```{r}
+anage <- read.csv("anage_data.csv", header = TRUE, sep = "\t")
+
+print(colnames(anage))
+
+anage <- select(anage,
+                Common.name,
+                Phylum,
+                Class,
+                Order,
+                Family,
+                Species,
+                Metabolic.rate..W.)
+
+#anage <- filter(anage, complete.cases(anage))
+```
+
+-->
 
 ## 3. Data aggregation
 
+<!--
 *Aggregation of data. Show the result as a table (at least 3). Use only methods, that lead to a solution, like user defined functions, mutate, filter, summarise, inner_join, ggplot. Use the tidyverse approach by chaining the above functions and using pipes %>%.*
+-->
+
+#### For the further analysis, it was needed to process some data.
+
+1) *Lifespan* values were **inconsistent**, so I got a new column *Average Lifespan (dbl, in years)* using defined function and `mutate`. The same was done with the *Weight..kg.* column. The entries with unknown average lifespan were filtered with `filter`, since this parameter is the key of the whole research.
+
+```{r}
+  process_intervals <- function(col) {
+    cleaned_values <- numeric(length(col))
+    
+    intervals <- grepl("-", col)
+    dash_split <- strsplit(col[intervals], "-")
+    interval_avg <- sapply(dash_split, function(x) mean(as.double(x)))
+    cleaned_values[intervals] <- interval_avg
+    
+    days_values <- grepl("days", col, ignore.case = TRUE)
+    days_numbers <- as.double(gsub("[^0-9]+", "", col[days_values]))
+    cleaned_values[days_values] <- days_numbers / 365
+    
+    months_values <- grepl("months", col, ignore.case = TRUE)
+    months_numbers <- as.double(gsub("[^0-9]+", "", col[months_values]))
+    cleaned_values[months_values] <- months_numbers / 12
+    
+    remaining_values <- !(intervals | days_values | months_values)
+    cleaned_values[remaining_values] <- as.double(gsub("[^0-9]+", "", col[remaining_values]))
+    
+    return(cleaned_values)
+  }
+  
+  data <- animals %>%
+    mutate(Average.Lifespan = process_intervals(Lifespan..years.)) %>%
+    mutate(Weight..kg. = process_intervals(Weight..kg.)) %>%
+    filter(!is.na(Average.Lifespan))
+
+  data$Lifespan..years. <- NULL
+  
+  
+  # TODO: to fix decimal values in weight
+  print(data[7,])
+  print(data[8,])
+  print(data[19,])
+```
+
+2) Merging dataframes to get animal's classification info:
+
+```{r}
+  data <- left_join(data, classifications, by = c("Animal" = "Animal.Name"))
+```
+
+The result dataframe I have been workin with for my data analysis:
+
+```{r}
+  as_tibble(data)
+  #data %>% as_tibble() %>% print(n=nrow(data))
+```
 
 ## 4. Explotary data analysis
 
+<!--
 *Visualisation of the data, at least 3 relevant (and
 distinct) ggplots, that are not the same type of plot. Explain each
 ggplot)*
+-->
 
 ## 5. Conclusion
 
+<!--
 *Interpretation / Conclusion*
+-->
 
 ## 6. References
 
-(@) AnAge: Animal Ageing and Longevity Data Dataset. ([kaggle.com](https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage.csv))
+(@) Animal Information Dataset ([kaggle.com](https://www.kaggle.com/datasets/iamsouravbanerjee/animal-information-dataset))
+(@) Animals Dataset ([kaggle.com](https://www.kaggle.com/datasets/hessahalkhattabi/animals))
+(@) AnAge: Animal Ageing and Longevity Data Dataset. ([kaggle.com](https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage_data.csv))
 (@) Peto's paradox ([widipedia.org](https://en.wikipedia.org/wiki/Peto%27s_paradox))
