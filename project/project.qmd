@@ -11,18 +11,14 @@ format:
   html:
     embed-resources: true
 execute: 
-  warning: false
-messages: false
-echo: true
-error: true
+  messages: false
+  echo: false
+  error: false
 ---
 
 ```{r}
-library(dplyr)
-library(tibble)
-library(ggplot2)
+library(tidyverse)
 library(gridExtra)
-library(tidyr)
 ```
 
 ## 1. Introduction
@@ -41,7 +37,7 @@ Understanding the relationship between animal life expectancy and various factor
 
 #### In my work I've used two dataframes:
 
-### 1) Animal Information Dataset (further -- "animals DF")
+### 1) Animal Information Dataset
 
 ```{r}
   animals <- read.csv("Animal Dataset.csv", header = TRUE, sep = ",")
@@ -70,7 +66,7 @@ This dataframe contains the majority of the necessary data for my research, incl
   as_tibble(animals)
 ```
 
-### 2) Animals (further -- "classifications DF")
+### 2) Animals
 
 ```{r}
   classifications <- read.csv("animals.csv", header = TRUE, sep = ",")
@@ -104,14 +100,17 @@ This dataframe was involved to get more **detailed animal's classification info*
     cleaned_values <- numeric(length(col))
     
     intervals <- grepl("-", col)
-    dash_split <- strsplit(col[intervals], "-")
-    interval_avg <- sapply(dash_split, function(x) mean(as.double(x)))
-    cleaned_values[intervals] <- interval_avg
+    cleaned_values[intervals] <- strsplit(col[intervals], "-") %>% 
+      sapply(function(x) mean(as.double(x), na.rm = TRUE))
     
     days_values <- grepl("days", col, ignore.case = TRUE)
     days_numbers <- as.double(gsub("[^0-9]+", "", col[days_values]))
     cleaned_values[days_values] <- days_numbers / 365
     
+    weeks_values <- grepl("weeks", col, ignore.case = TRUE)
+    weeks_numbers <- as.double(gsub("[^0-9]+", "", col[weeks_values]))
+    cleaned_values[weeks_values] <- weeks_numbers / 52
+  
     months_values <- grepl("months", col, ignore.case = TRUE)
     months_numbers <- as.double(gsub("[^0-9]+", "", col[months_values]))
     cleaned_values[months_values] <- months_numbers / 12
@@ -123,10 +122,10 @@ This dataframe was involved to get more **detailed animal's classification info*
   }
   
   data <- animals %>%
-    mutate(Average.Lifespan = process_intervals(Lifespan..years.)) %>%
-    mutate(Weight..kg. = process_intervals(Weight..kg.)) %>%
+    mutate(Average.Lifespan = process_intervals(Lifespan..years.),
+           Weight..kg. = process_intervals(Weight..kg.)) %>%
     filter(!is.na(Average.Lifespan))
-
+  
   data$Lifespan..years. <- NULL
 ```
 
@@ -139,8 +138,7 @@ This dataframe was involved to get more **detailed animal's classification info*
 The result dataframe I have been working with for my data analysis:
 
 ```{r}
-  print(colnames(data))
-  as_tibble(data)
+  glimpse(data)
 ```
 
 ## 4. Explotary data analysis
@@ -185,15 +183,30 @@ This part of my work is dedicated for discovering of the patterns of the depende
 
 ### General analysis
 
-For the general analysis I have displayed *top-50 animals by lifespan* and highlighted them by *order*. ***This method will be used further in my analysis for other factors as well.***
+First of all, the orders of the absolute long-livers were discovered. I grouped the animals by their *orders* and visualized the graphic of the average lifespans among the representatives of each order.
 
 ```{r}
+  orders_data <- data %>% 
+    group_by(Order) %>% 
+    summarise(mean_lifespan = mean(Average.Lifespan)) %>% 
+    arrange(desc(mean_lifespan))
+  
+  ggplot(orders_data, aes(x = Order, y = mean_lifespan, fill = Order)) +
+    geom_col() +
+    ggtitle("Mean Lifespan by Order") +
+    ylab("Mean Lifespan") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
   plot_top(data, "Order", 50)
 ```
 
-Graphic shows us that averagely animals of **Primates, Artiodactyla, Carnivora, Squamata** and **Perissodactyla** orders live longer and the absolute long-livers are the representatives of **Testudines, Artiodactyla, Sirenia** and **Proboscidea** orders.
+Due to the graphic analysis result, could be easily detected that absolute long-livers are the representatives of **Testudines, Sirenia** and **Proboscidea** orders.
 
-With the further analysis I was trying to explain the patterns of this result. Further analysis included only top long-livers.
+After, for the more detailed analysis I have displayed *top 50 longest-living animals* and highlighted them by the criterea - *order*. ***This method will be used further in my analysis for other factors as well.***
+
+Graphics show us that among the animals with the longest lifespan there are also the representatives of **Primates, Artiodactyla, Carnivora, Squamata** and **Perissodactyla** orders.
+
+With the further analysis I was trying to explain the patterns of this result. Further analysis included only mentioned top long-livers.
 
 ```{r}
   data <- data %>%
@@ -203,23 +216,28 @@ With the further analysis I was trying to explain the patterns of this result. F
 ## Body Mass and long-living
 
 ```{r}
-  ggplot(data, aes(x = Average.Lifespan, y = Weight..kg., color = Order)) +
+  ggplot(data %>% filter(!is.na(Weight..kg.)), aes(x = Average.Lifespan, y = Weight..kg., color = Order)) +
     geom_point() +
     labs(x = "Average Lifespan (years)", y = "Body Mass (kg)")
 ```
 
-In general it is seen that among long-livers there are animals of very diverse masses. Moreover on the increased scale, a pattern was not detected as well.
+In general it is seen that among long-livers there are animals of **very diverse masses**. Moreover, on the increased scales a pattern was not detected as well.
 
 ```{r}
-  mass_plot <- function (scale) {
-    ggplot(data %>% filter(!is.na("Weigth..kg.")), aes(x = Average.Lifespan, y = Weight..kg., color = Order)) +
+  mass_plot <- function (data, scale) {
+    ggplot(data %>% filter(!is.na(Weight..kg.) & Weight..kg. <= scale), 
+           aes(x = Average.Lifespan, y = Weight..kg., color = Order)) +
       geom_point() +
       labs(x = "Average Lifespan (years)", y = paste0("Body Mass (kg), up to ", scale)) +
       scale_y_continuous(limits = c(0, scale)) +
       guides(color = "none")
   }
 
-  grid.arrange(mass_plot(5000), mass_plot(1000), mass_plot(100), ncol = 3)
+  grid.arrange(
+    mass_plot(data, 5000), 
+    mass_plot(data, 1000), 
+    mass_plot(data, 100), 
+    ncol = 3)
 ```
 
 Interesting observation is that there are mostly **gigantic ot miniature/average creatures** among long-livers. This observation aligns with **Peto's paradox**, which suggests that larger animals should have a higher risk of cancer due to more cells and longer lifespans, yet many larger animals, like elephants, whales, and tortoises, exhibit lower cancer rates.
@@ -252,7 +270,7 @@ Surprisingly, the **solitary** social structure absolutely prevailed. This can b
 
 In conclusion, this project was created in order to give an explanation of the patterns of animal life expectancy and its correlations with few selected factors.
 
-The initial analysis of top-50 animals by lifespan, categorized by order, unveiled that Primates, Artiodactyla, Carnivora, Squamata, and Perissodactyla tend to have longer lifespans on average, while Testudines, Artiodactyla, Sirenia, and Proboscidea stand out as absolute long-livers.
+The initial analysis of top-50 animals by lifespan, categorized by order, unveiled that **Primates, Artiodactyla, Carnivora, Squamata,** and **Perissodactyla** tend to have longer lifespans on average, while **Testudines, Sirenia,** and **Proboscidea** stand out as absolute long-livers.
 
 Further investigation explored the relationship between lifespan and body mass, revealing a **diverse range of body sizes** among long-living species.
 
@@ -264,7 +282,6 @@ In essence, this project illuminates the multifaceted interplay between animal l
 
 (@) Animal Information Dataset ([kaggle.com](https://www.kaggle.com/datasets/iamsouravbanerjee/animal-information-dataset))
 (@) Animals Dataset ([kaggle.com](https://www.kaggle.com/datasets/hessahalkhattabi/animals))
-(@) AnAge: Animal Ageing and Longevity Data Dataset. ([kaggle.com](https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage_data.csv))
 (@) Primate Sociality and Social Systems ([Nature](https://www.nature.com/scitable/knowledge/library/primate-sociality-and-social-systems-58068905/))
 (@) Social organization of a solitary carnivore ([The Royal Society](https://royalsocietypublishing.org/doi/10.1098/rsos.182160))
 (@) Peto's paradox ([widipedia.org](https://en.wikipedia.org/wiki/Peto%27s_paradox))
