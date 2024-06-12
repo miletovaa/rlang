@@ -31,6 +31,8 @@ library(tidyr)
 *Introduction / Presentation and description of the problem*
 -->
 
+Understanding the relationship between animal life expectancy and various factors is pivotal in explanation of the dynamics of biological longevity. In this project, I have been discovering the patterns and dependencies that cause the longevity of different animal species. By analyzing factors such as **order classification, body mass, diet type, and social structure** with the help of data visualization, I aimed to explain the impact of these variables on life expectancy of species.
+
 ## 2. Dataframes
 
 <!--
@@ -247,6 +249,16 @@ Surprisingly, the **solitary** social structure absolutely prevailed. This can b
 <!--
 *Interpretation / Conclusion*
 -->
+
+In conclusion, this project was created in order to give an explanation of the patterns of animal life expectancy and its correlations with few selected factors.
+
+The initial analysis of top-50 animals by lifespan, categorized by order, unveiled that Primates, Artiodactyla, Carnivora, Squamata, and Perissodactyla tend to have longer lifespans on average, while Testudines, Artiodactyla, Sirenia, and Proboscidea stand out as absolute long-livers.
+
+Further investigation explored the relationship between lifespan and body mass, revealing a **diverse range of body sizes** among long-living species.
+
+The impact of diet type emerged as a significant determinant of lifespan, with **non-carnivores** exhibiting longer lifespans on average. Similarly, an analysis of social structures among long-livers revealed a prevalence of **solitary species**, potentially attributable to reduced predation risk, lower disease transmission, and decreased competition.
+
+In essence, this project illuminates the multifaceted interplay between animal life expectancy and various ecological and biological factors, underscoring the complexity of evolutionary adaptations and ecological dynamics in shaping longevity among diverse species.
 
 ## 6. References
 
