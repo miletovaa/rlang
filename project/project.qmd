@@ -20,6 +20,9 @@ error: true
 ```{r}
 library(dplyr)
 library(tibble)
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
 ```
 
 ## 1. Introduction
@@ -44,8 +47,6 @@ library(tibble)
   animals <- select(animals,
       Animal,
       Lifespan..years.,
-      Countries.Found,
-      Habitat,
       Weight..kg.,
       Diet,
       Social.Structure) %>%
@@ -86,28 +87,6 @@ This dataframe was involved to get more **detailed animal's classification info*
   print(colnames(classifications) %>% setdiff("Animal.Name"))
 ```
 
-<!--
-### 3) AnAge: Animal Ageing and Longevity Data
-
-```{r}
-anage <- read.csv("anage_data.csv", header = TRUE, sep = "\t")
-
-print(colnames(anage))
-
-anage <- select(anage,
-                Common.name,
-                Phylum,
-                Class,
-                Order,
-                Family,
-                Species,
-                Metabolic.rate..W.)
-
-#anage <- filter(anage, complete.cases(anage))
-```
-
--->
-
 ## 3. Data aggregation
 
 <!--
@@ -147,25 +126,19 @@ anage <- select(anage,
     filter(!is.na(Average.Lifespan))
 
   data$Lifespan..years. <- NULL
-  
-  
-  # TODO: to fix decimal values in weight
-  print(data[7,])
-  print(data[8,])
-  print(data[19,])
 ```
 
 2) Merging dataframes to get animal's classification info:
 
 ```{r}
-  data <- left_join(data, classifications, by = c("Animal" = "Animal.Name"))
+  data <- inner_join(data, classifications, by = c("Animal" = "Animal.Name"))
 ```
 
-The result dataframe I have been workin with for my data analysis:
+The result dataframe I have been working with for my data analysis:
 
 ```{r}
+  print(colnames(data))
   as_tibble(data)
-  #data %>% as_tibble() %>% print(n=nrow(data))
 ```
 
 ## 4. Explotary data analysis
@@ -175,6 +148,99 @@ The result dataframe I have been workin with for my data analysis:
 distinct) ggplots, that are not the same type of plot. Explain each
 ggplot)*
 -->
+
+This part of my work is dedicated for discovering of the patterns of the dependencies between **animals life expectancy** and different **factors**.
+
+```{r}
+  plot_top <- function(data, key_col, top_n) {
+    top_animals <- data %>%
+      arrange(desc(Average.Lifespan)) %>%
+      distinct(Animal, .keep_all = TRUE) %>%
+      head(top_n)
+    
+    top_animals$Animal <- factor(top_animals$Animal, levels = top_animals$Animal[order(top_animals$Average.Lifespan)])
+    
+    bar_plot <- ggplot(top_animals, aes(x = Animal, y = Average.Lifespan, fill = !!sym(key_col))) +
+      geom_bar(stat = "identity") +
+      coord_flip() +
+      labs(x = "Animal", y = "Average lifespan (years)") +
+      guides(fill = "none") +
+      theme_minimal()
+    
+    pie_data <- top_animals %>%
+      count(!!sym(key_col)) %>%
+      mutate(perc = n / sum(n) * 100)
+    
+    pie_plot <- ggplot(pie_data, aes(x = "", y = perc, fill = !!sym(key_col))) +
+      geom_bar(stat = "identity") + 
+      coord_polar(theta = "y") +
+      scale_fill_discrete(labels = function(x) paste0(x, " (", round(pie_data$perc), "%)")) +
+      theme_void()
+    
+    grid.arrange(bar_plot, pie_plot, ncol = 2)
+  }
+```
+
+### General analysis
+
+For the general analysis I have displayed *top-50 animals by lifespan* and highlighted them by *order*. ***This method will be used further in my analysis for other factors as well.***
+
+```{r}
+  plot_top(data, "Order", 50)
+```
+
+Graphic shows us that averagely animals of **Primates, Artiodactyla, Carnivora, Squamata** and **Perissodactyla** orders live longer and the absolute long-livers are the representatives of **Testudines, Artiodactyla, Sirenia** and **Proboscidea** orders.
+
+With the further analysis I was trying to explain the patterns of this result. Further analysis included only top long-livers.
+
+```{r}
+  data <- data %>%
+    filter(Order %in% c("Primates", "Artiodactyla", "Carnivora", "Testudines", "Sirenia", "Proboscidea", "Squamata", "Perissodactyla"))
+```
+
+## Body Mass and long-living
+
+```{r}
+  ggplot(data, aes(x = Average.Lifespan, y = Weight..kg., color = Order)) +
+    geom_point() +
+    labs(x = "Average Lifespan (years)", y = "Body Mass (kg)")
+```
+
+In general it is seen that among long-livers there are animals of very diverse masses. Moreover on the increased scale, a pattern was not detected as well.
+
+```{r}
+  mass_plot <- function (scale) {
+    ggplot(data %>% filter(!is.na("Weigth..kg.")), aes(x = Average.Lifespan, y = Weight..kg., color = Order)) +
+      geom_point() +
+      labs(x = "Average Lifespan (years)", y = paste0("Body Mass (kg), up to ", scale)) +
+      scale_y_continuous(limits = c(0, scale)) +
+      guides(color = "none")
+  }
+
+  grid.arrange(mass_plot(5000), mass_plot(1000), mass_plot(100), ncol = 3)
+```
+
+Interesting observation is that there are mostly **gigantic ot miniature/average creatures** among long-livers. This observation aligns with **Peto's paradox**, which suggests that larger animals should have a higher risk of cancer due to more cells and longer lifespans, yet many larger animals, like elephants, whales, and tortoises, exhibit lower cancer rates.
+
+### Diet type impact on the lifespan
+
+For the analysis, I took top 20 long-livers and highlighted them by the diet type.
+
+```{r}
+  plot_top(data, "Diet", 20)
+```
+
+The graphic illustrates an obvious pattern: **non-carnivores averagely live longer**. The lifespan of filter feeders (aquatic animals that acquire nutrients by feeding on organic matters, food particles or smaller organisms), herbivores (species that eat only plants) and omnivores (those who can eat both, meat and plants) is longer.
+
+### Social structure factor impact on the lifespan
+
+Analogically to the previous factor analysis, I took top 20 long-livers and highlighted them by their social structure.
+
+```{r}
+  plot_top(data, "Social.Structure", 20)
+```
+
+Surprisingly, the **solitary** social structure absolutely prevailed. This can be related to the fact that these species are **less detectable by predators**, most likely to be **polygynous**, have lower **transmission of diseases rate** and have **reduced competition**, leading to  less stress and lower risk of injuries. 
 
 ## 5. Conclusion
 
@@ -187,4 +253,6 @@ ggplot)*
 (@) Animal Information Dataset ([kaggle.com](https://www.kaggle.com/datasets/iamsouravbanerjee/animal-information-dataset))
 (@) Animals Dataset ([kaggle.com](https://www.kaggle.com/datasets/hessahalkhattabi/animals))
 (@) AnAge: Animal Ageing and Longevity Data Dataset. ([kaggle.com](https://www.kaggle.com/datasets/mattop/anage-animal-ageing-and-longevity-data/data?select=anage_data.csv))
+(@) Primate Sociality and Social Systems ([Nature](https://www.nature.com/scitable/knowledge/library/primate-sociality-and-social-systems-58068905/))
+(@) Social organization of a solitary carnivore ([The Royal Society](https://royalsocietypublishing.org/doi/10.1098/rsos.182160))
 (@) Peto's paradox ([widipedia.org](https://en.wikipedia.org/wiki/Peto%27s_paradox))
