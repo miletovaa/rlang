@@ -1,6 +1,14 @@
 # This repository presents the Data Analysis solutions done with the help of the R language
 
-<!-- project -->
+## 📈 **"Animals’ life span. Factors that play role in the longevity of animals."**
+
+### This explotary data analysis project illustrates the dependencies between between animal life expectancy and various ecological and biological factors.
+
+![](https://github.com/miletovaa/rlang/blob/main/project/img/Screenshot.png)
+
+> **Dataset provided*
+> 
+> **[Deployed to netlify ↗️](https://earnest-bavarois-9d1765.netlify.app/project/project.html)*
 
 ## 👩‍🎓 Educational problems overview
 
